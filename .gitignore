@@ -1,0 +1,12 @@
+*.o
+*.obj
+*.lib
+*.so
+*.dll
+*.exe
+*.swp
+.~
+thumbs.db
+a.out
+Practica/*/build/
+.vscode
