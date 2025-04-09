@@ -1,6 +1,6 @@
 # Sistemas Operativos 2025
 
-Para compilar y ejecutar helloworld (assemble)
+Para compilar y ejecutar helloworld (assembler)
 
 - Instalar `nasm`
 - Instalar `ld` (si no lo tenes)
