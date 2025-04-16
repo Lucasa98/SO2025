@@ -5,104 +5,67 @@
 
 using namespace std;
 
-unsigned int N = 0;
-unsigned int n1 = 0;
-unsigned int n2 = 0;
-unsigned int n3 = 0;
-float sq;
-int estados;
-bool esprimo = false;
+int NUM_THREADS;	// cantidad de hilos utilizados
+unsigned int N;		// numero evaluandose
+bool DONE;			// bandera de parada
+bool ESPRIMO;
 
-void* hilo1(void* arg) {
-	while(1) {
-		if(n1 == 0) {
-			n1 = 2;
-			if(N%n1 == 0) {
-				esprimo = false;
-				--estados;
-			} else {
-				n1 = 3;
-				while(n1 <= sq && N%n1 != 0) {
-					n1 += 6;
-				}
-				
-				if(n1 <= sq) {
-					esprimo = false;
-				}
-				--estados;
-			}
-		}
-	}
-}
+// optimizaciones
+int INCREMENTO;
+unsigned int SQRT;	// raiz cuadrada de N
 
-void* hilo2(void* arg) {
-	while(1) {
-		if(n2 == 0) {
-			n2 = 5;
-			while(n2 <= sq && N%n2 != 0) {
-				n2 += 6;
-			}
-			
-			if(n2 <= sq) {
-				esprimo = false;
-			}
-			--estados;
-		}
-	}
-}
+void* esPrimoConcurrente(void* arg) {
+	int i = *((int*) arg);
 
-void* hilo3(void* arg) {
-	while(1) {
-		if(n3 == 0) {
-			n3 = 7;
-			while(n3 <= sq && N%n3 != 0) {
-				n3 += 6;
-			}
-			
-			if(n3 <= sq) {
-				esprimo = false;
-			}
-			--estados;
-		}
+	unsigned int num = 3+2*i;
+	while(!DONE && num <= SQRT && N%num != 0) {
+		num += INCREMENTO;
 	}
+	if(!DONE && num <= SQRT) {
+		ESPRIMO = false;
+		DONE = true;
+	}
+
+	return NULL;
 }
 
 int main() {
-	pthread_t* h = new pthread_t[3];
-	pthread_attr_t* attr = new pthread_attr_t[3];
-	for(int i=0; i<3; ++i) {
+	// entrada
+	int num_primos;
+	cout << "Numero de hilos: "; cin >> NUM_THREADS;
+	cout << "Numero de primos: "; cin >> num_primos;
+
+	// inicializaciones
+	INCREMENTO = 2*NUM_THREADS;
+	int* d = new int[NUM_THREADS];	// vamos a usar los mismos indices siempre
+	int c = 1;						// empezamos contando el 2
+	N = 3;
+	pthread_t* h = new pthread_t[NUM_THREADS];
+	pthread_attr_t* attr = new pthread_attr_t[NUM_THREADS];
+	for(int i=0; i<NUM_THREADS; ++i) {
+		d[i] = i;					// vamos a usar siempre los mismos i
 		pthread_attr_init(attr+i);
 	}
 
 	auto t = chrono::high_resolution_clock::now();
-	pthread_create(h, attr, hilo1, NULL);
-	pthread_create(h+1, attr+1, hilo2, NULL);
-	pthread_create(h+2, attr+2, hilo3, NULL);
-
-	int c = 0;
-	int numPrimos = 10000;
-	N = 5;
-	while(c < numPrimos) {
-		esprimo = true;
-		estados = 3;
-		sq = sqrt(N);
-		n1 = 0;
-		n2 = 0;
-		n3 = 0;
-		while(!esprimo && estados){}
-		n1 = N;
-		n2 = N;
-		n3 = N;
-		if(esprimo)
+	while(c < num_primos) {
+		SQRT = sqrt(N);
+		ESPRIMO = true;
+		DONE = false;
+		for(int i=0; i<NUM_THREADS; ++i){
+			pthread_create(h+i, attr+i,esPrimoConcurrente,(void*) (d+i));
+		}
+		for(int i=0; i<NUM_THREADS; ++i){
+			pthread_join(h[i],NULL);
+		}
+		if(ESPRIMO)
 			++c;
-		N+=2;
+		N += 2;
 	}
 	cout << "ultimo primo: " << N-2 << endl;
 
-	pthread_cancel(h[0]);
-	pthread_cancel(h[1]);
-	pthread_cancel(h[2]);
 	auto Tthreads = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - t).count();
+    cout << "Tthreads: " << Tthreads << "ms" << endl;
 
 	return 0;
 }
