@@ -14,16 +14,28 @@ bool ESPRIMO;
 int INCREMENTO;
 unsigned int SQRT;	// raiz cuadrada de N
 
+bool esPrimo(){
+	unsigned int num = 3;
+	while(num <= SQRT) {
+		if(N%num == 0)
+			return false;
+		num += 2;
+	}
+
+	return true;
+}
+
 void* esPrimoConcurrente(void* arg) {
 	int i = *((int*) arg);
 
 	unsigned int num = 3+2*i;
-	while(!DONE && num <= SQRT && N%num != 0) {
+	while(!DONE && num <= SQRT) {
+		if(!DONE && N%num == 0) {
+			ESPRIMO = false;
+			DONE = true;
+			return NULL;
+		}
 		num += INCREMENTO;
-	}
-	if(!DONE && num <= SQRT) {
-		ESPRIMO = false;
-		DONE = true;
 	}
 
 	return NULL;
@@ -62,10 +74,25 @@ int main() {
 			++c;
 		N += 2;
 	}
-	cout << "ultimo primo: " << N-2 << endl;
-
 	auto Tthreads = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - t).count();
+
+	cout << "Primo N°" << num_primos << ": " << N-2 << endl;
     cout << "Tthreads: " << Tthreads << "ms" << endl;
+
+	// Version monohilo
+	c = 1;
+	N = 3;
+	t = chrono::high_resolution_clock::now();
+	while(c < num_primos) {
+		SQRT = sqrt(N);
+		if(esPrimo())
+			++c;
+		N += 2;
+	}
+	auto Tmono = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - t).count();
+
+	cout << "Primo N°" << num_primos << ": " << N-2 << endl;
+    cout << "Tmono: " << Tmono << "ms" << endl;
 
 	return 0;
 }
