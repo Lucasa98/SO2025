@@ -14,7 +14,7 @@ El proceso principal (main) esperara que todos los hilos hayan terminado (DONE[i
 Para evitar que dos hilos escriban/lean la misma variable al mismo tiempo, se les asigna unas banderas DONE y ESPRIMO a cada uno.
 
 Aunque creamos los hilos una unica vez, ahorrandonos la inicializacion cada vez que los necesitamos, la version multihilo es ligeramente PEOR.
-Por ejemplo, para 1M de primos, con 3 hilos la version multihilo necesita ~4650ms, mientras que la monohilo necesita ~2059ms. Casi el triple
+Por ejemplo, para 1M de primos, con 3 hilos la version multihilo necesita ~4650ms, mientras que la monohilo necesita ~2059ms. Casi el triple.
 PROBABLEMENTE esto se debe a la cantidad de logica usada en el "semaforo"
 */
 
@@ -114,7 +114,7 @@ int main() {
 			d[i] = i;					// vamos a usar siempre los mismos i
 			pthread_attr_init(attr+i);
 			pthread_create(h+i, attr+i,esPrimoConcurrente,(void*) (d+i));
-			// asignar un core especifico a cada thread
+			// asignar un core especifico a cada thread para aprovechar cache. No note diferencia
 			CPU_ZERO(cpuset+i);
 			CPU_SET(i, cpuset+i);
 			pthread_setaffinity_np(h[i],sizeof(cpuset[i]), cpuset+i);
@@ -157,16 +157,17 @@ int main() {
 			N += 2;
 		}
 		auto Tthreads = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - t).count();
-		EXIT = true;
 
+		// Limpiar
+		EXIT = true;
 		for(int i=0; i<num_threads; ++i) {
 			pthread_cancel(h[i]);
 		}
-
 		delete[] d;
 		delete[] DONE;
 		delete[] ESPRIMO;
 
+		// Resultado
 		cout << "Primo N°" << num_primos << ": " << N-2 << endl;
 		cout << "Tthreads: " << Tthreads << "ms" << endl;
 	}
