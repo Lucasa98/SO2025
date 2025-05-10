@@ -21,11 +21,13 @@ void *A(void *) {
 
 void *B(void *) {
     while(1) {
+        sleep(1);
         sem_wait(&sem_B);   // cerrojo destrabado por C
         sem_wait(&sem_F);   // cerrojo destrabado por A
-        cout << " B";
+        cout << flush << " B";  // forzar flush para no mostrar todo de golpe al llenar el buffer
         sem_post(&sem_C);   // B destraba C
         sem_post(&sem_A);   // B destraba A
+
     }
 }
 
