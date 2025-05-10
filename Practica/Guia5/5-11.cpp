@@ -5,6 +5,10 @@
 
 using namespace std;
 
+/**
+ * El flujo tiene que ser H1->H2->H1->H2
+ */
+
 sem_t sem1, sem2;
 
 void* H1(void* arg) {
