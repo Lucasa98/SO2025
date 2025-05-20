@@ -1,0 +1,1 @@
+Usar el [planificador](https://gitlab.com/fichunl/sistop/-/tree/main/Recursos/Planificador?ref_type=heads)
